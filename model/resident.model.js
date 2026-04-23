@@ -123,3 +123,19 @@ export const getResidentsByPocketId = async (pocket_id) => {
     throw error;
   }
 };
+
+export const getResidentIdByFlatNumber = async (pocket_id, flat_number) => {
+  const query = `
+    SELECT id
+    FROM resident
+    WHERE pocket_id = $1
+      AND flat_number = $2
+  `;
+  try {
+    const { rows } = await pool.query(query, [pocket_id, flat_number]);
+    return rows[0] ? rows[0].id : null;
+  } catch (error) {
+    console.error("Error fetching resident ID by flat number:", error);
+    throw error;
+  }
+};

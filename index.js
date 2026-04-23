@@ -23,8 +23,8 @@ console.log("Created Pocket:", pocket);
 const payment = await createPayments({
   amount_due: 600,
   late_fee: 20,
-  due_date: "2026-05-07",
-  payment_for_month: "MAY",
+  due_date: "2026-03-07",
+  payment_for_month: "MAR",
   society_id: society.id,
   pocket_id: pocket.id,
 });
