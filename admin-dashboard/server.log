@@ -1,0 +1,6 @@
+
+> admin-dashboard@1.0.0 start
+> node index.js
+
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+AdminJS is successfully running at http://localhost:3000/admin

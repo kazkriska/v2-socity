@@ -67,7 +67,7 @@ CREATE TABLE payment (
     id SERIAL PRIMARY KEY,
     resident_id INT NOT NULL,
     amount_due INT NOT NULL,
-    late_fee INT DEFAULT 0,
+   -- late_fee INT DEFAULT 0,
     due_date DATE NOT NULL,
     paid BOOLEAN DEFAULT FALSE,
     payment_date DATE,
@@ -96,8 +96,8 @@ CREATE OR REPLACE VIEW resident_details AS
 SELECT
     r.id AS resident_id,
     s.id AS society_id,
-    s.name AS society_name,
     p.id AS pocket_id,
+    s.name AS society_name,
     p.name AS pocket_name,
     r.flat_number
 FROM resident r
@@ -119,7 +119,13 @@ SELECT
     r.flat_number,
 
     pay.amount_due,
-    pay.late_fee,
+
+    -- 👇 dynamic late fee
+    CASE 
+        WHEN CURRENT_DATE > pay.due_date AND pay.paid = FALSE THEN 20
+        ELSE 0
+    END AS late_fee,
+
     pay.due_date,
     pay.paid,
     pay.payment_date,
