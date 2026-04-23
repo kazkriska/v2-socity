@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getSocietiesAction,
   getPocketsAction,
   getResidentAction,
 } from "./actions";
 
-export default function Home() {
+function LandingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [societies, setSocieties] = useState<any[]>([]);
   const [selectedSociety, setSelectedSociety] = useState<string>("");
   const [pockets, setPockets] = useState<any[]>([]);
@@ -18,25 +20,39 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
+  // 1. Initial Load: Fetch societies and check URL for pre-fill
   useEffect(() => {
-    // Fetch societies on mount
     getSocietiesAction().then((data) => {
       setSocieties(data);
+      
+      // If we have a society ID in URL, select it
+      const sId = searchParams.get("sId");
+      if (sId) setSelectedSociety(sId);
+      
+      const f = searchParams.get("f");
+      if (f) setFlatNumber(f);
     });
-  }, []);
+  }, [searchParams]);
 
+  // 2. When Society changes (either by user or by URL pre-fill)
   useEffect(() => {
     if (selectedSociety) {
-      // Fetch pockets when society changes
       getPocketsAction(Number(selectedSociety)).then((data) => {
         setPockets(data);
-        setSelectedPocket(""); // Reset pocket selection
+        
+        // If we have a pocket ID in URL, select it only if it belongs to this society
+        const pId = searchParams.get("pId");
+        if (pId && data.some((p: any) => p.id === Number(pId))) {
+          setSelectedPocket(pId);
+        } else {
+          setSelectedPocket(""); 
+        }
       });
     } else {
       setPockets([]);
       setSelectedPocket("");
     }
-  }, [selectedSociety]);
+  }, [selectedSociety, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,12 +74,14 @@ export default function Home() {
         const societyName = societies.find(s => s.id === Number(selectedSociety))?.name;
         const pocketName = pockets.find(p => p.id === Number(selectedPocket))?.name;
         
-        // Navigate to confirmation page with resident data
+        // Pass everything to confirmation, including IDs for the "Edit" button
         const params = new URLSearchParams({
           id: result.toString(),
           society: societyName || "",
           pocket: pocketName || "",
-          flat: flatNumber
+          flat: flatNumber,
+          sId: selectedSociety,
+          pId: selectedPocket
         });
         router.push(`/confirmation?${params.toString()}`);
       } else {
@@ -85,11 +103,8 @@ export default function Home() {
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Society Dropdown */}
           <div className="space-y-1">
-            <label htmlFor="society" className="block text-sm font-medium text-gray-700">
-              Society
-            </label>
+            <label htmlFor="society" className="block text-sm font-medium text-gray-700">Society</label>
             <select
               id="society"
               value={selectedSociety}
@@ -98,18 +113,13 @@ export default function Home() {
             >
               <option value="">Select a society</option>
               {societies.map((soc) => (
-                <option key={soc.id} value={soc.id}>
-                  {soc.name}
-                </option>
+                <option key={soc.id} value={soc.id}>{soc.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Pocket Dropdown */}
           <div className="space-y-1">
-            <label htmlFor="pocket" className="block text-sm font-medium text-gray-700">
-              Pocket
-            </label>
+            <label htmlFor="pocket" className="block text-sm font-medium text-gray-700">Pocket</label>
             <select
               id="pocket"
               value={selectedPocket}
@@ -119,18 +129,13 @@ export default function Home() {
             >
               <option value="">Select a pocket</option>
               {pockets.map((pkt) => (
-                <option key={pkt.id} value={pkt.id}>
-                  {pkt.name}
-                </option>
+                <option key={pkt.id} value={pkt.id}>{pkt.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Flat Number Input */}
           <div className="space-y-1">
-            <label htmlFor="flatNumber" className="block text-sm font-medium text-gray-700">
-              Flat Number
-            </label>
+            <label htmlFor="flatNumber" className="block text-sm font-medium text-gray-700">Flat Number</label>
             <input
               type="number"
               id="flatNumber"
@@ -155,5 +160,13 @@ export default function Home() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <LandingPage />
+    </Suspense>
   );
 }

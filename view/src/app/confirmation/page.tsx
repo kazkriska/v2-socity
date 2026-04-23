@@ -15,6 +15,10 @@ function ConfirmationContent() {
   const society = searchParams.get("society");
   const pocket = searchParams.get("pocket");
   const flat = searchParams.get("flat");
+  
+  // New: Capture IDs to pass back for editing
+  const sId = searchParams.get("sId");
+  const pId = searchParams.get("pId");
 
   useEffect(() => {
     if (residentId) {
@@ -24,6 +28,14 @@ function ConfirmationContent() {
       });
     }
   }, [residentId]);
+
+  const handleEdit = () => {
+    const params = new URLSearchParams();
+    if (sId) params.set("sId", sId);
+    if (pId) params.set("pId", pId);
+    if (flat) params.set("f", flat);
+    router.push(`/?${params.toString()}`);
+  };
 
   if (!residentId) {
     return <div className="p-4">Invalid Access. Please go back.</div>;
@@ -35,7 +47,7 @@ function ConfirmationContent() {
         {/* Info Div */}
         <div className="bg-white rounded-xl shadow-sm p-4 relative border border-gray-100">
           <button 
-            onClick={() => router.push("/")}
+            onClick={handleEdit}
             className="absolute top-3 right-3 text-gray-400 hover:text-blue-600 transition-colors"
           >
             <Edit2 size={16} />
